@@ -1,0 +1,22 @@
+{
+  "name": "@saltcorn/filter-button-group",
+  "version": "0.1.1",
+  "description": "Filter button groups",
+  "main": "index.js",
+  "dependencies": {
+    "@saltcorn/markup": "^0.4.0",
+    "@saltcorn/data": "^0.4.0"
+  },
+  "author": "Tom Nielsen",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^25.1.0"
+  },
+  "repository": "github:saltcorn/filter-button-group",
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "scripts": {
+    "test": "jest"
+  }
+}
