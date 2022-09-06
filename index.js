@@ -72,7 +72,7 @@ const get_state_fields = () => [];
 const run = async (
   table_id,
   viewname,
-  { field_name, neutral_label, horizontal , spacing},
+  { field_name, neutral_label, horizontal, spacing },
   state,
   extra
 ) => {
@@ -103,7 +103,7 @@ const run = async (
       distinct_values.unshift({ label: "", value: "" });
     }
   }
-  return div(
+  return div(horizontal && spacing === 0 ? { class: "btn-group", role: "group" } : {},
     distinct_values.map(({ label, value, jsvalue }) => {
       const active =
         state[field_name] === or_if_undef(jsvalue, value) ||
@@ -114,7 +114,7 @@ const run = async (
           class: [
             "btn",
             !horizontal && "d-block",
-            horizontal ? `mr-${spacing} mb-${spacing}`: `mb-${spacing}`,
+            horizontal ? `me-${spacing} mb-${spacing}` : `mb-${spacing}`,
             active
               ? `btn-${style || "primary"}`
               : `btn-outline-${style || "primary"}`,
@@ -123,9 +123,8 @@ const run = async (
           onClick:
             active || !value
               ? `unset_state_field('${field_name}')`
-              : `set_state_field('${field_name}', '${
-                  value || ""
-                }')`,
+              : `set_state_field('${field_name}', '${value || ""
+              }')`,
         },
         !value && !label ? neutral_label : label || value
       );
