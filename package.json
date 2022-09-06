@@ -1,6 +1,6 @@
 {
   "name": "@saltcorn/filter-button-group",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Filter button groups",
   "main": "index.js",
   "dependencies": {
