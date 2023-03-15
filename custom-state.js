@@ -40,6 +40,8 @@ const configuration_workflow = () =>
                     name: "state_formula",
                     label: "State formula",
                     class: "validate-expression",
+                    sublabel:
+                      'Formula for state object, e.g. <code>{a:1, b:"Hello"}</code>',
                     type: "String",
                   },
                 ],
@@ -80,7 +82,7 @@ const run = async (
   const fields = await table.getFields();
   readState(state, fields);
   const allKeys = new Set([]);
-  const btnsCopy = (button || []).map(({ label, state_formula }) => {
+  const btnsCopy = (buttons || []).map(({ label, state_formula }) => {
     const state_obj = eval_expression(state_formula, {});
     Object.keys(state_obj).forEach((k) => allKeys.add(k));
     return {
@@ -109,7 +111,7 @@ const run = async (
           ],
           onClick: `set_state_fields({${unsetKeys
             .map((k) => `${k}: {unset: true},`)
-            .join("")}${myKeys
+            .join("")}${[...myKeys]
             .map(
               (k) =>
                 `${k}: ${
