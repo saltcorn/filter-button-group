@@ -2,6 +2,8 @@ const Workflow = require("@saltcorn/data/models/workflow");
 const Table = require("@saltcorn/data/models/table");
 const Form = require("@saltcorn/data/models/form");
 const Field = require("@saltcorn/data/models/field");
+const { eval_expression } = require("@saltcorn/data/models/expression");
+const FieldRepeat = require("@saltcorn/data/models/fieldrepeat");
 const db = require("@saltcorn/data/db");
 const {
   div,
@@ -22,28 +24,26 @@ const configuration_workflow = () =>
   new Workflow({
     steps: [
       {
-        name: "Field",
+        name: "Buttons",
         form: async (context) => {
           const table = await Table.findOne({ id: context.table_id });
           const fields = await table.getFields();
 
           return new Form({
             fields: [
-              {
-                name: "field_name",
-                label: "Field",
-                type: "String",
-                required: true,
-                attributes: {
-                  options: fields.map((f) => f.name),
-                },
-              },
-              {
-                name: "neutral_label",
-                label: "Neutral label",
-                default: "All",
-                type: "String",
-              },
+              new FieldRepeat({
+                name: "buttons",
+                label: "Buttons",
+                fields: [
+                  { name: "label", label: "Label", type: "String" },
+                  {
+                    name: "state_formula",
+                    label: "State formula",
+                    class: "validate-expression",
+                    type: "String",
+                  },
+                ],
+              }),
               {
                 name: "horizontal",
                 label: "Horizontal",
@@ -72,43 +72,29 @@ const get_state_fields = () => [];
 const run = async (
   table_id,
   viewname,
-  { field_name, neutral_label, horizontal, spacing },
+  { buttons, horizontal, spacing },
   state,
   extra
 ) => {
   const table = await Table.findOne(table_id);
   const fields = await table.getFields();
   readState(state, fields);
-  const field = fields.find((f) => f.name === field_name);
-  let distinct_values = [];
-
-  if (table.external) {
-    distinct_values = (await table.distinctValues(field_name)).map((x) => ({
-      label: x,
-      value: x,
-    }));
-  } else if (field) distinct_values = await field.distinct_values(extra.req);
-  else if (field_name.includes(".")) {
-    const kpath = field_name.split(".");
-    if (kpath.length === 3) {
-      const [jtNm, jFieldNm, lblField] = kpath;
-      const jtable = await Table.findOne({ name: jtNm });
-      const jfields = await jtable.getFields();
-      const jfield = jfields.find((f) => f.name === lblField);
-      if (jfield) distinct_values = await jfield.distinct_values();
-    }
-  }
-  if (distinct_values && distinct_values[0]) {
-    if (distinct_values[0].value !== "") {
-      distinct_values.unshift({ label: "", value: "" });
-    }
-  }
+  const allKeys = new Set([]);
+  const btnsCopy = (button || []).map(({ label, state_formula }) => {
+    const state_obj = eval_expression(state_formula, {});
+    Object.keys(state_obj).forEach((k) => allKeys.add(k));
+    return {
+      label,
+      state_formula,
+      state_obj,
+    };
+  });
   return div(
     horizontal && spacing === 0 ? { class: "btn-group", role: "group" } : {},
-    distinct_values.map(({ label, value, jsvalue }) => {
-      const active =
-        state[field_name] === or_if_undef(jsvalue, value) ||
-        (!value && !state[field_name]);
+    btnsCopy.map(({ label, state_formula, state_obj }) => {
+      const myKeys = new Set(Object.keys(state_obj));
+      const unsetKeys = [...allKeys].filter((k) => !myKeys.has(k));
+      const active = [...myKeys].every((k) => state[k] == state_obj[k]);
       let style, size;
       return button(
         {
@@ -121,12 +107,20 @@ const run = async (
               : `btn-outline-${style || "primary"}`,
             size && size,
           ],
-          onClick:
-            active || !value
-              ? `unset_state_field('${field_name}')`
-              : `set_state_field('${field_name}', '${value || ""}')`,
+          onClick: `set_state_fields({${unsetKeys
+            .map((k) => `${k}: {unset: true},`)
+            .join("")}${myKeys
+            .map(
+              (k) =>
+                `${k}: ${
+                  typeof state_obj[k] === "string"
+                    ? `'${state_obj[k]}'`
+                    : state_obj[k]
+                },`
+            )
+            .join("")}})`,
         },
-        !value && !label ? neutral_label : label || value
+        label
       );
     })
   );
@@ -136,15 +130,9 @@ const or_if_undef = (x, y) => (typeof x === "undefined" ? y : x);
 const eq_string = (x, y) => `${x}` === `${y}`;
 
 module.exports = {
-  sc_plugin_api_version: 1,
-  viewtemplates: [
-    {
-      name: "FilterButtonGroup",
-      display_state_form: false,
-      get_state_fields,
-      configuration_workflow,
-      run,
-    },
-    require("./custom-state"),
-  ],
+  name: "Custom State FilterButtonGroup",
+  display_state_form: false,
+  get_state_fields,
+  configuration_workflow,
+  run,
 };

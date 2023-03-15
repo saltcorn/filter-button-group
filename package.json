@@ -13,10 +13,20 @@
     "jest": "^25.1.0"
   },
   "repository": "github:saltcorn/filter-button-group",
-  "jest": {
-    "testEnvironment": "node"
-  },
-  "scripts": {
-    "test": "jest"
+  "eslintConfig": {
+    "extends": "eslint:recommended",
+    "parserOptions": {
+      "ecmaVersion": 2020
+    },
+    "env": {
+      "node": true,
+      "es6": true
+    },
+    "rules": {
+      "no-unused-vars": "off",
+      "no-case-declarations": "off",
+      "no-empty": "warn",
+      "no-fallthrough": "warn"
+    }
   }
 }
