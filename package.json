@@ -1,6 +1,6 @@
 {
   "name": "@saltcorn/filter-button-group",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Filter button groups",
   "main": "index.js",
   "dependencies": {
@@ -9,9 +9,6 @@
   },
   "author": "Tom Nielsen",
   "license": "MIT",
-  "devDependencies": {
-    "jest": "^25.1.0"
-  },
   "repository": "github:saltcorn/filter-button-group",
   "eslintConfig": {
     "extends": "eslint:recommended",
