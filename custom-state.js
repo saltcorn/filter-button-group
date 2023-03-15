@@ -95,8 +95,11 @@ const run = async (
     horizontal && spacing === 0 ? { class: "btn-group", role: "group" } : {},
     btnsCopy.map(({ label, state_formula, state_obj }) => {
       const myKeys = new Set(Object.keys(state_obj));
-      const unsetKeys = [...allKeys].filter((k) => !myKeys.has(k));
+
       const active = [...myKeys].every((k) => state[k] == state_obj[k]);
+      const unsetKeys = active
+        ? [...allKeys]
+        : [...allKeys].filter((k) => !myKeys.has(k));
       let style, size;
       return button(
         {
@@ -111,7 +114,7 @@ const run = async (
           ],
           onClick: `set_state_fields({${unsetKeys
             .map((k) => `${k}: {unset: true},`)
-            .join("")}${[...myKeys]
+            .join("")}${[...(active ? [] : myKeys)]
             .map(
               (k) =>
                 `${k}: ${
