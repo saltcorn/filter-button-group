@@ -60,6 +60,12 @@ const configuration_workflow = () =>
                   min: 0,
                 },
               },
+              {
+                name: "disjunction",
+                label: "Disjunction",
+                sublabel: "OR filter value",
+                type: "Bool",
+              },
             ],
           });
         },
@@ -72,7 +78,7 @@ const get_state_fields = () => [];
 const run = async (
   table_id,
   viewname,
-  { field_name, neutral_label, horizontal, spacing },
+  { field_name, neutral_label, horizontal, spacing, disjunction },
   state,
   extra
 ) => {
@@ -107,9 +113,26 @@ const run = async (
     horizontal && spacing === 0 ? { class: "btn-group", role: "group" } : {},
     distinct_values.map(({ label, value, jsvalue }) => {
       const active =
+        (disjunction &&
+          Array.isArray(state[field_name]) &&
+          (state[field_name].includes(value) ||
+            state[field_name].includes(jsvalue))) ||
         state[field_name] === or_if_undef(jsvalue, value) ||
         (!value && !state[field_name]);
       let style, size;
+      let onClick;
+      if (!disjunction)
+        onClick =
+          active || !value
+            ? `unset_state_field('${field_name}')`
+            : `set_state_field('${field_name}', '${value || ""}')`;
+      else {
+        if (!value) onClick = `unset_state_field('${field_name}')`;
+        else
+          onClick = `check_state_field({name: '${field_name}', value: '${value}', checked: ${JSON.stringify(
+            !active
+          )}})`;
+      }
       return button(
         {
           class: [
@@ -121,10 +144,7 @@ const run = async (
               : `btn-outline-${style || "primary"}`,
             size && size,
           ],
-          onClick:
-            active || !value
-              ? `unset_state_field('${field_name}')`
-              : `set_state_field('${field_name}', '${value || ""}')`,
+          onClick,
         },
         !value && !label ? neutral_label : label || value
       );
