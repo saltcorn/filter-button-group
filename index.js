@@ -124,14 +124,14 @@ const run = async (
       if (!disjunction)
         onClick =
           active || !value
-            ? `unset_state_field('${field_name}')`
-            : `set_state_field('${field_name}', '${value || ""}')`;
+            ? `unset_state_field('${field_name}', this)`
+            : `set_state_field('${field_name}', '${value || ""}',this)`;
       else {
-        if (!value) onClick = `unset_state_field('${field_name}')`;
+        if (!value) onClick = `unset_state_field('${field_name}',this)`;
         else
           onClick = `check_state_field({name: '${field_name}', value: '${value}', checked: ${JSON.stringify(
             !active
-          )}})`;
+          )}}, this)`;
       }
       return button(
         {
